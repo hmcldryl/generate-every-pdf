@@ -1,0 +1,15 @@
+node_modules/
+out/
+dist/
+output/*
+!output/.gitkeep
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Local Claude Code state — not project source
+.claude/
+
+# Working notes, not for the public repo
+PROJECT.md

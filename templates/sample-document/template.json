@@ -1,0 +1,10 @@
+{
+  "fields": [
+    { "key": "documentId", "label": "Document ID", "required": true },
+    { "key": "recipientName", "label": "Recipient Name", "required": true },
+    { "key": "date", "label": "Date" },
+    { "key": "subject", "label": "Subject" },
+    { "key": "body", "label": "Body" }
+  ],
+  "fileNamePattern": ["documentId", "recipientName"]
+}
