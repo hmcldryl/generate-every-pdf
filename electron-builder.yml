@@ -1,0 +1,32 @@
+appId: com.example.generateeverypdf
+productName: GenerateEveryPDF
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**/*
+  - package.json
+
+extraResources:
+  - from: templates
+    to: templates
+  - from: mappings
+    to: mappings
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: '${productName}-${version}-setup.${ext}'
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+# Puppeteer bundles its own Chromium into node_modules/puppeteer/.local-chromium
+# (or the cache dir set at install time); electron-builder must not strip it.
+asarUnpack:
+  - node_modules/puppeteer/**
+  - node_modules/better-sqlite3/**
