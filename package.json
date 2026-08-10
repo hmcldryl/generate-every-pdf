@@ -1,18 +1,23 @@
 {
   "name": "generateeverypdf",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Windows desktop app to batch-generate PDFs from spreadsheet data using user-defined HTML/CSS templates and JSON mapping configs.",
   "main": "./out/main/index.js",
   "author": "John Daryl Homecillo",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hmcldryl/generate-every-pdf.git"
+  },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "dist": "electron-vite build && electron-builder --win"
+    "dist": "electron-vite build && electron-builder --win",
+    "release": "electron-vite build && electron-builder --win --publish always"
   },
   "dependencies": {
     "better-sqlite3": "^11.9.1",

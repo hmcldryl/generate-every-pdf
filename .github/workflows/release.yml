@@ -1,0 +1,39 @@
+name: Release
+
+# Builds the Windows installer and uploads it to a draft GitHub Release.
+# Triggered by pushing a version tag (e.g. `v1.0.0`), or manually via the
+# Actions tab. The release is created as a draft — nothing is publicly
+# visible until it's published by hand in the GitHub UI.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build and publish installer
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
