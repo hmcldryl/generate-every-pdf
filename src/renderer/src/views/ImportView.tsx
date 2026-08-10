@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ImportedSheet } from '@shared/types'
+import { IconArrowBack, IconFolderOpen } from '../components/Icon'
 
 interface Props {
   onImported: (sheet: ImportedSheet) => void
@@ -31,13 +32,21 @@ export default function ImportView({ onImported, onBack }: Props): JSX.Element {
   return (
     <div className="view">
       <h2>Import sheet</h2>
-      <p>Export the Google Sheet as .xlsx or .csv, then import it here.</p>
+      <p>Works with .xlsx, .xls, or .csv files, from any spreadsheet software.</p>
       <button onClick={handlePickFile} disabled={busy}>
-        {busy ? 'Importing…' : 'Choose file…'}
+        {busy ? (
+          'Importing…'
+        ) : (
+          <>
+            <IconFolderOpen /> Choose file…
+          </>
+        )}
       </button>
       {fileName && <p>Imported: {fileName}</p>}
       {error && <p className="error">{error}</p>}
-      <button onClick={onBack}>Back</button>
+      <button onClick={onBack}>
+        <IconArrowBack /> Back
+      </button>
     </div>
   )
 }

@@ -1,17 +1,21 @@
-import { readdir, readFile } from 'node:fs/promises'
+import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { app } from 'electron'
-import type { TemplateFieldDef, TemplateRef } from '@shared/types'
+import type {
+  FieldMapping,
+  NewTemplateInput,
+  PaperSize,
+  TemplateFieldDef,
+  TemplateRef,
+  TemplateSettings,
+  TemplateSource,
+  UpdateTemplateInput
+} from '@shared/types'
+import { templatesRoot } from '../paths'
 
-// In dev, templates/ lives at repo root; in a packaged build it's copied
-// alongside resources (see electron-builder.yml extraResources).
-export function templatesRoot(): string {
-  return app.isPackaged ? join(process.resourcesPath, 'templates') : join(app.getAppPath(), 'templates')
-}
-
-// Every folder directly under templates/ is one template: template.html +
-// style.css + optional template.json (field schema) + assets/. No fixed
-// document-type categories — add a folder, get a template.
+// Every folder directly under Documents/GenerateEveryPDF/Templates/ is one
+// template: template.html + style.css + template.json (the one settings
+// file: fields, mapping, startRow, paperSize, fileNamePattern) + assets/.
+// No fixed document-type categories — add a folder, get a template.
 export async function listTemplates(): Promise<TemplateRef[]> {
   const dir = templatesRoot()
   try {
@@ -29,7 +33,7 @@ export async function listTemplates(): Promise<TemplateRef[]> {
 // data fields, so auto-detection doesn't offer them as mappable columns.
 const HANDLEBARS_KEYWORDS = new Set(['if', 'else', 'unless', 'each', 'with', 'this', 'log'])
 
-function autoDetectFields(templateHtml: string): TemplateFieldDef[] {
+export function detectTemplateFields(templateHtml: string): TemplateFieldDef[] {
   const keys = new Set<string>()
   const matches = templateHtml.matchAll(/\{\{\s*([#/>&]?)\s*([a-zA-Z0-9_.]+)/g)
   for (const [, sigil, rawKey] of matches) {
@@ -41,14 +45,33 @@ function autoDetectFields(templateHtml: string): TemplateFieldDef[] {
   return Array.from(keys).map((key) => ({ key, label: key }))
 }
 
+// Raw shape of template.json on disk — every key optional, since a
+// template can rely entirely on {{placeholder}} auto-detection.
 interface TemplateJson {
   fields?: TemplateFieldDef[]
+  mapping?: FieldMapping
+  startRow?: number
+  paperSize?: PaperSize
   fileNamePattern?: string[]
+}
+
+const DEFAULT_START_ROW = 1
+const DEFAULT_PAPER_SIZE: PaperSize = 'A4'
+
+function templateJsonPath(templateRef: TemplateRef): string {
+  return join(templateRef.dir, 'template.json')
+}
+
+/** A template's raw editable source (HTML + CSS), for loading into the edit form. */
+export async function getTemplateSource(templateRef: TemplateRef): Promise<TemplateSource> {
+  const html = await readFile(join(templateRef.dir, 'template.html'), 'utf-8')
+  const css = await readFile(join(templateRef.dir, 'style.css'), 'utf-8').catch(() => '')
+  return { html, css }
 }
 
 async function readTemplateJson(templateRef: TemplateRef): Promise<TemplateJson | null> {
   try {
-    const raw = await readFile(join(templateRef.dir, 'template.json'), 'utf-8')
+    const raw = await readFile(templateJsonPath(templateRef), 'utf-8')
     return JSON.parse(raw) as TemplateJson
   } catch (err) {
     if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT') return null
@@ -59,21 +82,125 @@ async function readTemplateJson(templateRef: TemplateRef): Promise<TemplateJson 
 }
 
 /**
- * Field schema for a template: read from template.json in the template
- * folder if present (lets non-devs edit the field list per template
- * without touching app code), otherwise auto-detected from
- * {{placeholders}} in template.html.
+ * The one settings file for a template: field schema, column mapping,
+ * which sheet row data starts on, and paper size, read from template.json
+ * in the template folder. Fields fall back to auto-detecting
+ * {{placeholders}} from template.html if template.json has none declared.
  */
-export async function getTemplateFields(templateRef: TemplateRef): Promise<TemplateFieldDef[]> {
+export async function getTemplateSettings(templateRef: TemplateRef): Promise<TemplateSettings> {
   const config = await readTemplateJson(templateRef)
-  if (config?.fields) return config.fields
 
-  const html = await readFile(join(templateRef.dir, 'template.html'), 'utf-8')
-  return autoDetectFields(html)
+  let fields = config?.fields
+  if (!fields) {
+    const html = await readFile(join(templateRef.dir, 'template.html'), 'utf-8')
+    fields = detectTemplateFields(html)
+  }
+
+  return {
+    fields,
+    mapping: config?.mapping ?? {},
+    startRow: config?.startRow ?? DEFAULT_START_ROW,
+    paperSize: config?.paperSize ?? DEFAULT_PAPER_SIZE,
+    fileNamePattern: config?.fileNamePattern
+  }
 }
 
-/** Field keys used to build each generated file's name, if declared. */
-export async function getFileNamePattern(templateRef: TemplateRef): Promise<string[] | undefined> {
-  const config = await readTemplateJson(templateRef)
-  return config?.fileNamePattern
+/**
+ * Persists mapping / startRow / paperSize back into the template's
+ * template.json, merged with whatever fields/fileNamePattern already live
+ * there. This is the only write path for a template's settings.
+ */
+export async function saveTemplateSettings(
+  templateRef: TemplateRef,
+  patch: Pick<TemplateSettings, 'mapping' | 'startRow' | 'paperSize'>
+): Promise<TemplateSettings> {
+  const existing = (await readTemplateJson(templateRef)) ?? {}
+  const merged: TemplateJson = {
+    ...existing,
+    mapping: patch.mapping,
+    startRow: patch.startRow,
+    paperSize: patch.paperSize
+  }
+  await writeFile(templateJsonPath(templateRef), JSON.stringify(merged, null, 2) + '\n', 'utf-8')
+  return getTemplateSettings(templateRef)
+}
+
+/** Deletes a template's entire folder. Irreversible — the renderer confirms first. */
+export async function deleteTemplate(templateRef: TemplateRef): Promise<void> {
+  await rm(templateRef.dir, { recursive: true, force: true })
+}
+
+function slugify(name: string): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return slug || 'template'
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Creates a new template folder from the app itself: template.html, an
+ * empty style.css, an assets/ folder, and template.json with the field
+ * schema, start row, and paper size the user picked. Mapping starts empty —
+ * that's set per batch from the wizard's Template step.
+ */
+export async function createTemplate(input: NewTemplateInput): Promise<TemplateRef> {
+  const name = input.name.trim()
+  if (!name) throw new Error('Template name is required')
+  if (!input.html.trim()) throw new Error('Template HTML is required')
+
+  const id = slugify(name)
+  const dir = join(templatesRoot(), id)
+
+  if (await exists(dir)) {
+    throw new Error(`A template named "${id}" already exists`)
+  }
+
+  await mkdir(join(dir, 'assets'), { recursive: true })
+  await writeFile(join(dir, 'template.html'), input.html, 'utf-8')
+  await writeFile(join(dir, 'style.css'), input.css ?? '', 'utf-8')
+
+  const config: TemplateJson = {
+    fields: input.fields,
+    mapping: {},
+    startRow: input.startRow,
+    paperSize: input.paperSize,
+    fileNamePattern: input.fileNamePattern
+  }
+  await writeFile(join(dir, 'template.json'), JSON.stringify(config, null, 2) + '\n', 'utf-8')
+
+  return { id, dir }
+}
+
+/**
+ * Overwrites an existing template's HTML, CSS, field schema, start row,
+ * and paper size. The folder name doesn't change; mapping and
+ * fileNamePattern (set from the app's Template step) are left as they are.
+ */
+export async function updateTemplate(templateRef: TemplateRef, input: UpdateTemplateInput): Promise<TemplateRef> {
+  if (!input.html.trim()) throw new Error('Template HTML is required')
+
+  await writeFile(join(templateRef.dir, 'template.html'), input.html, 'utf-8')
+  await writeFile(join(templateRef.dir, 'style.css'), input.css, 'utf-8')
+
+  const existing = (await readTemplateJson(templateRef)) ?? {}
+  const merged: TemplateJson = {
+    ...existing,
+    fields: input.fields,
+    startRow: input.startRow,
+    paperSize: input.paperSize
+  }
+  await writeFile(templateJsonPath(templateRef), JSON.stringify(merged, null, 2) + '\n', 'utf-8')
+
+  return templateRef
 }

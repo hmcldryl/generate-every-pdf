@@ -6,7 +6,9 @@
   </head>
   <body>
     <header class="letterhead">
-      <!-- <img src="assets/letterhead.png" alt="Letterhead" /> -->
+      <!-- Static assets that belong to the template itself (a logo, a
+           letterhead) live in this template's own assets/ folder and are
+           referenced directly, e.g. <img src="assets/logo.png" />. -->
       <h1>{{subject}}</h1>
       <p class="meta">Document ID: {{documentId}} · {{date}}</p>
     </header>
@@ -14,6 +16,28 @@
     <section class="body">
       <p>To: {{recipientName}}</p>
       <p>{{body}}</p>
+
+      <!-- Image field: the mapped sheet column holds just a filename
+           (e.g. "jane-doe.jpg"). At generation time the app looks that
+           filename up in Documents/GenerateEveryPDF/Images and embeds it —
+           nothing to configure per row beyond dropping the file in that
+           folder and typing its name into the sheet. -->
+      <div class="photo-box">
+        {{#if photo}}
+          <img class="photo" src="{{photo}}" alt="Photo" />
+        {{else}}
+          <div class="photo-placeholder">No photo</div>
+        {{/if}}
+      </div>
+
+      <!-- Checkbox field: the mapped sheet column holds text ("Yes"/"No",
+           or any value); {{#if (eq ...)}} / {{#if (notEmpty ...)}} draw a
+           checked or unchecked box depending on it. See
+           handlebarsHelpers.ts for both helpers. -->
+      <p class="checkbox-row">
+        <span class="box">{{#if (eq subscribed "Yes")}}☑{{else}}☐{{/if}}</span>
+        Subscribe to updates
+      </p>
     </section>
 
     <footer class="signature">

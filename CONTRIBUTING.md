@@ -22,16 +22,17 @@ npx electron-builder install-app-deps
 ## Project layout
 
 - `src/main/` — Electron main process:
-  - `ipc/` — IPC handlers: import, mapping, generate, template, settings, history, stats.
-  - `db/` — SQLite schema + queries (`better-sqlite3`).
+  - `paths.ts` — resolves `Documents/GenerateEveryPDF/{Templates,Images}` and seeds a starter template on first run.
+  - `ipc/` — IPC handlers: import, generate, template, settings, storage.
+  - `db/` — SQLite schema + queries (`better-sqlite3`): imported sheets and settings only.
   - `import/` — `.xlsx`/`.csv` parsing.
-  - `generate/` — `worker_threads` entry running the Puppeteer batch-render loop.
+  - `generate/` — `worker_threads` entry running the Puppeteer batch-render loop, plus image resolution/compression and the one-off preview renderer.
 - `src/preload/` — `contextBridge` API surface exposed to the renderer as `window.api`.
-- `src/renderer/src/` — React UI: `AppShell.tsx` (sidebar + content layout) and `views/` (Dashboard, Templates, Mapping Presets, History, Settings, and the Import → Template → Mapping → Generate wizard).
+- `src/renderer/src/` — React UI: `AppShell.tsx` (sidebar + content layout) and `views/` (Templates, Settings, and the Import → Template → Generate wizard).
 - `src/shared/` — types (`types.ts`) and IPC channel names (`ipc.ts`) shared between main and renderer — keep both processes talking through these, not ad hoc payloads.
-- `templates/` — user-facing template folders (see `templates/README.md`).
+- `templates/` — the bundled starter template, copied into `Documents/GenerateEveryPDF/Templates/` on first run (see `templates/README.md`). A user's actual templates live only under that Documents folder from then on.
 
-App flow: import a sheet → pick a template folder → map sheet columns to the template's declared fields (or paste raw mapping JSON) → generate. Generation spins up a single Puppeteer browser for the whole batch, renders each row's Handlebars template via `page.setContent()` + `page.pdf()`, and logs per-row success/failure to SQLite.
+App flow: import a sheet → pick a template folder → map sheet columns to the template's declared fields (or paste raw mapping JSON), saved into that template's `template.json` → generate. Generation spins up a single Puppeteer browser for the whole batch, renders each row's Handlebars template to a temp `file://` document, `page.pdf()`s it, and resolves any image-field filenames against `Documents/GenerateEveryPDF/Images/`.
 
 ## Before opening a PR
 
