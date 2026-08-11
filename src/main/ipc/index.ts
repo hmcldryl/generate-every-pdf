@@ -4,6 +4,7 @@ import { IPC } from '@shared/ipc'
 import type {
   AppSettings,
   GenerateJobConfig,
+  GenerateSingleJobConfig,
   NewTemplateInput,
   TemplatePreviewInput,
   TemplateRef,
@@ -21,7 +22,7 @@ import {
   getTemplateSource,
   detectTemplateFields
 } from './template'
-import { runGenerateJob, cancelGenerateJob } from './generate'
+import { runGenerateJob, runGenerateSingle, cancelGenerateJob } from './generate'
 import { renderTemplatePreview } from '../generate/preview'
 import { getSettings, setSetting } from './settings'
 import { getStorageDirs } from '../paths'
@@ -100,6 +101,10 @@ export function registerIpcHandlers(): void {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) throw new Error('No window for generate job')
     return runGenerateJob(win, job)
+  })
+
+  ipcMain.handle(IPC.GENERATE_SINGLE, async (_event, job: GenerateSingleJobConfig) => {
+    return runGenerateSingle(job)
   })
 
   ipcMain.handle(IPC.GENERATE_CANCEL, async () => {

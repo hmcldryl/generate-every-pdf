@@ -11,8 +11,9 @@ Import a `.xlsx`/`.csv` → map its columns to your template's fields → genera
 - **Any document, any template** — a template is just a folder (`template.html` + `style.css` + optional `template.json`). Add a folder, get a new document type.
 - **Data-driven field schema** — declare fields in `template.json`, or let the app auto-detect `{{placeholders}}` from your HTML. Fields can be tagged `text`, `checkbox`, or `image`.
 - **Column → field mapping** — form UI or raw JSON, saved back into the template's own `template.json` so it's remembered per template.
-- **Row images by filename** — an `image`-type field's mapped sheet cell holds just a filename; the app looks it up in `Documents/GenerateEveryPDF/Images/` and embeds it, recompressed to keep PDFs small.
+- **Row images by filename** — an `image`-type field's mapped sheet cell holds just a filename; the app looks it up in that template's own `Documents/GenerateEveryPDF/Images/<template-name>/` subfolder and embeds it, recompressed to keep PDFs small.
 - **Batch generation** — single headless-Chromium instance for the whole run, progress reported live, failed rows skipped and reported without halting the batch.
+- **Single document generation** — skip the spreadsheet entirely and type one document's field values straight into a form when you just need one PDF, not a batch.
 - **Local-first** — no cloud dependency. Templates and images live under `Documents/GenerateEveryPDF/`; imported sheets and settings live in a local SQLite file.
 
 ## Screenshots

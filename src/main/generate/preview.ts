@@ -16,8 +16,9 @@ import { registerTemplateHelpers } from './handlebarsHelpers'
 registerTemplateHelpers(Handlebars)
 
 // A plain gray box, standing in for a real photo — real image fields resolve
-// a filename from Documents/GenerateEveryPDF/Images at generation time, but
-// there's no real row (or Images folder lookup) to preview with here.
+// a filename from Documents/GenerateEveryPDF/Images/<template-name>/ at
+// generation time, but there's no real row (or Images folder lookup) to
+// preview with here.
 const PLACEHOLDER_IMAGE =
   'data:image/svg+xml;base64,' +
   Buffer.from(

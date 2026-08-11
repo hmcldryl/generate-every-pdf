@@ -112,7 +112,6 @@ export default function TemplatesView(): JSX.Element {
           <li key={t.id} className="template-card">
             <div className="template-card-header" onClick={() => toggleExpand(t)}>
               <span className="template-year">{t.id}</span>
-              <span className="template-path">{t.dir}</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation()

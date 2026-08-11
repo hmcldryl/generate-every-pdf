@@ -198,8 +198,8 @@ export default function TemplateFormView({ templateRef, onSaved, onCancel }: Pro
         Type is a label for you, not enforced by the app: <strong>Text</strong> prints the mapped value as-is.{' '}
         <strong>Checkbox</strong> — in the HTML, compare it with the <code>eq</code>/<code>notEmpty</code> helper,
         e.g. <code>{'{{#if (eq attending "Yes")}}'}</code>. <strong>Image</strong> — the mapped sheet cell holds
-        just a filename (e.g. <code>jane.jpg</code>), looked up in the Images folder at generation time (see
-        Settings).
+        just a filename (e.g. <code>jane.jpg</code>), looked up in this template's own subfolder under the
+        Images folder at generation time (see Settings).
       </p>
 
       {fields.length > 0 && (

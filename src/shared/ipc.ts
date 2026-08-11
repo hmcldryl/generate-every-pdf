@@ -12,6 +12,7 @@ export const IPC = {
   GET_TEMPLATE_SETTINGS: 'template:settings-get',
   SAVE_TEMPLATE_SETTINGS: 'template:settings-save',
   GENERATE_START: 'generate:start',
+  GENERATE_SINGLE: 'generate:single',
   GENERATE_CANCEL: 'generate:cancel',
   GENERATE_PROGRESS: 'generate:progress',
   GENERATE_ROW_RESULT: 'generate:row-result',

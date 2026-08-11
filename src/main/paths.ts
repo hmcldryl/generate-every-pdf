@@ -18,13 +18,21 @@ export function templatesRoot(): string {
   return join(documentsRoot(), 'Templates')
 }
 
-/**
- * Flat folder of image files a template's `image`-type fields resolve
- * against. A mapped sheet cell holding just a filename (e.g. "jane.jpg")
- * is looked up here at generation time — see worker.ts's resolveImageUrl().
- */
+/** Parent of every template's own image subfolder — see imagesDirForTemplate(). */
 export function imagesRoot(): string {
   return join(documentsRoot(), 'Images')
+}
+
+/**
+ * One template's own folder of image files, its `image`-type fields resolve
+ * against: Documents/GenerateEveryPDF/Images/<template-name>/. A mapped sheet
+ * cell holding just a filename (e.g. "jane.jpg") is looked up here at
+ * generation time — see worker.ts's resolveImageUrl(). Keyed by templateId
+ * (TemplateRef.id, the template's folder name) so same-named photos across
+ * different templates don't collide.
+ */
+export function imagesDirForTemplate(templateId: string): string {
+  return join(imagesRoot(), templateId)
 }
 
 // The template(s) shipped with the app itself, copied into Templates/ on
