@@ -2,38 +2,47 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '@shared/ipc'
 import type {
   AppSettings,
-  DashboardStats,
-  FieldMapping,
   GenerateJobConfig,
   GenerateProgress,
   GenerateRowResult,
-  GenerationJobSummary,
   ImportedSheet,
-  JobLogEntry,
-  MappingPreset,
+  NewTemplateInput,
+  StorageDirs,
   TemplateFieldDef,
-  TemplateRef
+  TemplatePreviewInput,
+  TemplateRef,
+  TemplateSettings,
+  TemplateSource,
+  UpdateTemplateInput
 } from '@shared/types'
 
 const api = {
   selectFile: (): Promise<string | null> => ipcRenderer.invoke(IPC.SELECT_FILE),
+  selectHtmlFile: (): Promise<string | null> => ipcRenderer.invoke(IPC.SELECT_HTML_FILE),
   selectOutputDir: (): Promise<string | null> => ipcRenderer.invoke(IPC.SELECT_OUTPUT_DIR),
   openOutputDir: (dirPath: string): Promise<void> => ipcRenderer.invoke(IPC.OPEN_OUTPUT_DIR, dirPath),
 
   importSheet: (filePath: string): Promise<ImportedSheet> => ipcRenderer.invoke(IPC.IMPORT_SHEET, filePath),
 
   listTemplates: (): Promise<TemplateRef[]> => ipcRenderer.invoke(IPC.LIST_TEMPLATES),
-  getTemplateFields: (templateRef: TemplateRef): Promise<TemplateFieldDef[]> =>
-    ipcRenderer.invoke(IPC.GET_TEMPLATE_FIELDS, templateRef),
+  createTemplate: (input: NewTemplateInput): Promise<TemplateRef> => ipcRenderer.invoke(IPC.CREATE_TEMPLATE, input),
+  updateTemplate: (templateRef: TemplateRef, input: UpdateTemplateInput): Promise<TemplateRef> =>
+    ipcRenderer.invoke(IPC.UPDATE_TEMPLATE, templateRef, input),
+  deleteTemplate: (templateRef: TemplateRef): Promise<void> => ipcRenderer.invoke(IPC.DELETE_TEMPLATE, templateRef),
+  getTemplateSource: (templateRef: TemplateRef): Promise<TemplateSource> =>
+    ipcRenderer.invoke(IPC.GET_TEMPLATE_SOURCE, templateRef),
+  previewTemplate: (input: TemplatePreviewInput): Promise<string> => ipcRenderer.invoke(IPC.PREVIEW_TEMPLATE, input),
+  detectTemplateFields: (html: string): Promise<TemplateFieldDef[]> =>
+    ipcRenderer.invoke(IPC.DETECT_TEMPLATE_FIELDS, html),
+  getTemplateSettings: (templateRef: TemplateRef): Promise<TemplateSettings> =>
+    ipcRenderer.invoke(IPC.GET_TEMPLATE_SETTINGS, templateRef),
+  saveTemplateSettings: (
+    templateRef: TemplateRef,
+    patch: Pick<TemplateSettings, 'mapping' | 'startRow' | 'paperSize'>
+  ): Promise<TemplateSettings> => ipcRenderer.invoke(IPC.SAVE_TEMPLATE_SETTINGS, templateRef, patch),
 
-  listMappingPresets: (templateId: string): Promise<MappingPreset[]> =>
-    ipcRenderer.invoke(IPC.LIST_MAPPING_PRESETS, templateId),
-  listAllMappingPresets: (): Promise<MappingPreset[]> => ipcRenderer.invoke(IPC.LIST_ALL_MAPPING_PRESETS),
-  saveMappingPreset: (name: string, templateId: string, mapping: FieldMapping): Promise<MappingPreset> =>
-    ipcRenderer.invoke(IPC.SAVE_MAPPING_PRESET, name, templateId, mapping),
-  deleteMappingPreset: (id: string): Promise<void> => ipcRenderer.invoke(IPC.DELETE_MAPPING_PRESET, id),
-
-  startGenerate: (job: GenerateJobConfig): Promise<void> => ipcRenderer.invoke(IPC.GENERATE_START, job),
+  startGenerate: (job: GenerateJobConfig): Promise<boolean> => ipcRenderer.invoke(IPC.GENERATE_START, job),
+  cancelGenerate: (): Promise<boolean> => ipcRenderer.invoke(IPC.GENERATE_CANCEL),
   onGenerateProgress: (cb: (p: GenerateProgress) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: GenerateProgress): void => cb(progress)
     ipcRenderer.on(IPC.GENERATE_PROGRESS, listener)
@@ -49,11 +58,7 @@ const api = {
   setSetting: (key: keyof AppSettings, value: string | undefined): Promise<AppSettings> =>
     ipcRenderer.invoke(IPC.SETTINGS_SET, key, value),
 
-  listGenerationJobs: (limit?: number): Promise<GenerationJobSummary[]> =>
-    ipcRenderer.invoke(IPC.HISTORY_LIST, limit),
-  getJobLogs: (jobId: string): Promise<JobLogEntry[]> => ipcRenderer.invoke(IPC.HISTORY_JOB_LOGS, jobId),
-
-  getDashboardStats: (): Promise<DashboardStats> => ipcRenderer.invoke(IPC.STATS_SUMMARY)
+  getStorageDirs: (): Promise<StorageDirs> => ipcRenderer.invoke(IPC.STORAGE_GET_DIRS)
 }
 
 contextBridge.exposeInMainWorld('api', api)

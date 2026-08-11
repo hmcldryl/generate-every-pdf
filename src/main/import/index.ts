@@ -8,12 +8,27 @@ export interface ParsedSheet {
   rows: Record<string, string>[]
 }
 
+// Excel on Windows commonly saves "CSV" as the system codepage (Windows-1252),
+// not UTF-8, even though the file has no way to say so. Decoding that as
+// UTF-8 doesn't throw — it just silently produces mojibake (the U+FFFD
+// replacement character) wherever an accented letter or smart quote was.
+// Detect that and fall back to Latin-1, which maps those same bytes 1:1
+// onto the right code points for the accented Western-European letters
+// (é, ñ, etc.) that show up in Filipino names/addresses.
+function decodeCsvBuffer(buffer: Buffer): string {
+  const bom = buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf
+  const body = bom ? buffer.subarray(3) : buffer
+  const utf8 = body.toString('utf-8')
+  return utf8.includes('�') ? body.toString('latin1') : utf8
+}
+
 /** Parse an .xlsx or .csv file into column names + row objects. */
 export async function parseSheetFile(filePath: string): Promise<ParsedSheet> {
   const ext = extname(filePath).toLowerCase()
 
   if (ext === '.csv') {
-    const text = await readFile(filePath, 'utf-8')
+    const buffer = await readFile(filePath)
+    const text = decodeCsvBuffer(buffer)
     const result = Papa.parse<Record<string, string>>(text, {
       header: true,
       skipEmptyLines: true

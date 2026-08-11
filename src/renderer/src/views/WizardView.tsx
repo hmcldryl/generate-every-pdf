@@ -1,16 +1,14 @@
 import { useState } from 'react'
-import type { FieldMapping, GenerateJobConfig, ImportedSheet, TemplateRef } from '@shared/types'
+import type { GenerateJobConfig, ImportedSheet, TemplateRef } from '@shared/types'
 import ImportView from './ImportView'
-import TemplateSelectView from './TemplateSelectView'
-import MappingView from './MappingView'
+import TemplateStepView from './TemplateStepView'
 import GenerateView from './GenerateView'
 
-type Step = 'import' | 'template' | 'mapping' | 'generate'
+type Step = 'import' | 'template' | 'generate'
 
 const STEPS: { key: Step; label: string }[] = [
   { key: 'import', label: 'Import sheet' },
   { key: 'template', label: 'Template' },
-  { key: 'mapping', label: 'Mapping' },
   { key: 'generate', label: 'Generate' }
 ]
 
@@ -22,12 +20,10 @@ export default function WizardView({ onExit }: Props): JSX.Element {
   const [step, setStep] = useState<Step>('import')
   const [sheet, setSheet] = useState<ImportedSheet | null>(null)
   const [templateRef, setTemplateRef] = useState<TemplateRef | null>(null)
-  const [mapping, setMapping] = useState<FieldMapping | null>(null)
 
   function restart(): void {
     setSheet(null)
     setTemplateRef(null)
-    setMapping(null)
     setStep('import')
   }
 
@@ -55,46 +51,30 @@ export default function WizardView({ onExit }: Props): JSX.Element {
           />
         )}
 
-        {step === 'template' && (
-          <TemplateSelectView
-            onSelect={(t) => {
+        {step === 'template' && sheet && (
+          <TemplateStepView
+            sheet={sheet}
+            onNext={(t) => {
               setTemplateRef(t)
-              setStep('mapping')
+              setStep('generate')
             }}
             onBack={() => setStep('import')}
           />
         )}
 
-        {step === 'mapping' && sheet && templateRef && (
-          <MappingView
-            sheet={sheet}
-            templateRef={templateRef}
-            onNext={(m) => {
-              setMapping(m)
-              setStep('generate')
-            }}
-            onBack={() => setStep('template')}
-          />
-        )}
-
-        {step === 'generate' && sheet && templateRef && mapping && (
+        {step === 'generate' && sheet && templateRef && (
           <GenerateView
             jobBase={
               {
                 sheetId: sheet.id,
-                templateRef,
-                mapping
+                templateRef
               } satisfies Omit<GenerateJobConfig, 'outputDir'>
             }
-            onBack={() => setStep('mapping')}
+            onBack={() => setStep('template')}
             onRestart={restart}
           />
         )}
       </div>
-
-      <button className="wizard-exit" onClick={onExit}>
-        ← Exit to dashboard
-      </button>
     </div>
   )
 }

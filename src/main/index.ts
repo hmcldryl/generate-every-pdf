@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { registerIpcHandlers } from './ipc'
+import { ensureAppDirs } from './paths'
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -28,7 +29,8 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await ensureAppDirs()
   registerIpcHandlers()
   createWindow()
 

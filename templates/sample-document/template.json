@@ -1,10 +1,15 @@
 {
   "fields": [
-    { "key": "documentId", "label": "Document ID", "required": true },
-    { "key": "recipientName", "label": "Recipient Name", "required": true },
-    { "key": "date", "label": "Date" },
-    { "key": "subject", "label": "Subject" },
-    { "key": "body", "label": "Body" }
+    { "key": "documentId", "label": "Document ID", "type": "text", "required": true },
+    { "key": "recipientName", "label": "Recipient Name", "type": "text", "required": true },
+    { "key": "date", "label": "Date", "type": "text" },
+    { "key": "subject", "label": "Subject", "type": "text" },
+    { "key": "body", "label": "Body", "type": "text" },
+    { "key": "subscribed", "label": "Subscribed", "type": "checkbox" },
+    { "key": "photo", "label": "Photo", "type": "image" }
   ],
+  "mapping": {},
+  "startRow": 1,
+  "paperSize": "A4",
   "fileNamePattern": ["documentId", "recipientName"]
 }

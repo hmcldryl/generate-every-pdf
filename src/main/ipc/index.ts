@@ -1,13 +1,30 @@
+import { readFile } from 'node:fs/promises'
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import { IPC } from '@shared/ipc'
-import type { AppSettings, FieldMapping, GenerateJobConfig, TemplateRef } from '@shared/types'
+import type {
+  AppSettings,
+  GenerateJobConfig,
+  NewTemplateInput,
+  TemplatePreviewInput,
+  TemplateRef,
+  TemplateSettings,
+  UpdateTemplateInput
+} from '@shared/types'
 import { importSheetFile } from './import'
-import { listTemplates, getTemplateFields } from './template'
-import { listMappingPresets, listAllMappingPresets, saveMappingPreset, deleteMappingPreset } from './mapping'
-import { runGenerateJob } from './generate'
+import {
+  listTemplates,
+  getTemplateSettings,
+  saveTemplateSettings,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  getTemplateSource,
+  detectTemplateFields
+} from './template'
+import { runGenerateJob, cancelGenerateJob } from './generate'
+import { renderTemplatePreview } from '../generate/preview'
 import { getSettings, setSetting } from './settings'
-import { listGenerationJobs, getJobLogs } from './history'
-import { getDashboardStats } from './stats'
+import { getStorageDirs } from '../paths'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC.SELECT_FILE, async () => {
@@ -16,6 +33,15 @@ export function registerIpcHandlers(): void {
       filters: [{ name: 'Spreadsheets', extensions: ['xlsx', 'xls', 'csv'] }]
     })
     return result.canceled ? null : result.filePaths[0]
+  })
+
+  ipcMain.handle(IPC.SELECT_HTML_FILE, async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'HTML', extensions: ['html', 'htm'] }]
+    })
+    if (result.canceled) return null
+    return readFile(result.filePaths[0], 'utf-8')
   })
 
   ipcMain.handle(IPC.SELECT_OUTPUT_DIR, async () => {
@@ -35,30 +61,49 @@ export function registerIpcHandlers(): void {
     return listTemplates()
   })
 
-  ipcMain.handle(IPC.GET_TEMPLATE_FIELDS, async (_event, templateRef: TemplateRef) => {
-    return getTemplateFields(templateRef)
+  ipcMain.handle(IPC.CREATE_TEMPLATE, async (_event, input: NewTemplateInput) => {
+    return createTemplate(input)
   })
 
-  ipcMain.handle(IPC.LIST_MAPPING_PRESETS, async (_event, templateId: string) => {
-    return listMappingPresets(templateId)
+  ipcMain.handle(IPC.UPDATE_TEMPLATE, async (_event, templateRef: TemplateRef, input: UpdateTemplateInput) => {
+    return updateTemplate(templateRef, input)
   })
 
-  ipcMain.handle(IPC.LIST_ALL_MAPPING_PRESETS, async () => {
-    return listAllMappingPresets()
+  ipcMain.handle(IPC.DELETE_TEMPLATE, async (_event, templateRef: TemplateRef) => {
+    return deleteTemplate(templateRef)
   })
 
-  ipcMain.handle(IPC.SAVE_MAPPING_PRESET, async (_event, name: string, templateId: string, mapping: FieldMapping) => {
-    return saveMappingPreset(name, templateId, mapping)
+  ipcMain.handle(IPC.GET_TEMPLATE_SOURCE, async (_event, templateRef: TemplateRef) => {
+    return getTemplateSource(templateRef)
   })
 
-  ipcMain.handle(IPC.DELETE_MAPPING_PRESET, async (_event, id: string) => {
-    deleteMappingPreset(id)
+  ipcMain.handle(IPC.PREVIEW_TEMPLATE, async (_event, input: TemplatePreviewInput) => {
+    return renderTemplatePreview(input)
   })
+
+  ipcMain.handle(IPC.DETECT_TEMPLATE_FIELDS, async (_event, html: string) => {
+    return detectTemplateFields(html)
+  })
+
+  ipcMain.handle(IPC.GET_TEMPLATE_SETTINGS, async (_event, templateRef: TemplateRef) => {
+    return getTemplateSettings(templateRef)
+  })
+
+  ipcMain.handle(
+    IPC.SAVE_TEMPLATE_SETTINGS,
+    async (_event, templateRef: TemplateRef, patch: Pick<TemplateSettings, 'mapping' | 'startRow' | 'paperSize'>) => {
+      return saveTemplateSettings(templateRef, patch)
+    }
+  )
 
   ipcMain.handle(IPC.GENERATE_START, async (event, job: GenerateJobConfig) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) throw new Error('No window for generate job')
-    await runGenerateJob(win, job)
+    return runGenerateJob(win, job)
+  })
+
+  ipcMain.handle(IPC.GENERATE_CANCEL, async () => {
+    return cancelGenerateJob()
   })
 
   ipcMain.handle(IPC.SETTINGS_GET, async () => {
@@ -69,15 +114,7 @@ export function registerIpcHandlers(): void {
     return setSetting(key, value)
   })
 
-  ipcMain.handle(IPC.HISTORY_LIST, async (_event, limit?: number) => {
-    return listGenerationJobs(limit)
-  })
-
-  ipcMain.handle(IPC.HISTORY_JOB_LOGS, async (_event, jobId: string) => {
-    return getJobLogs(jobId)
-  })
-
-  ipcMain.handle(IPC.STATS_SUMMARY, async () => {
-    return getDashboardStats()
+  ipcMain.handle(IPC.STORAGE_GET_DIRS, async () => {
+    return getStorageDirs()
   })
 }

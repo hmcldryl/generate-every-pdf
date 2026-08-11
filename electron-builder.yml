@@ -1,4 +1,4 @@
-appId: com.example.generateeverypdf
+appId: com.hmcldryl.generateeverypdf
 productName: GenerateEveryPDF
 directories:
   buildResources: build
@@ -11,8 +11,16 @@ files:
 extraResources:
   - from: templates
     to: templates
-  - from: mappings
-    to: mappings
+
+# Used by `npm run release` (electron-builder --publish always), driven by
+# .github/workflows/release.yml on a `v*` tag push. Uploads the installer to
+# a draft GitHub Release under this repo — publishing it live is a separate,
+# manual step in the GitHub UI.
+publish:
+  provider: github
+  owner: hmcldryl
+  repo: generate-every-pdf
+  releaseType: draft
 
 win:
   target:

@@ -1,13 +1,12 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import logo from './assets/icon.svg'
+import AboutModal from './AboutModal'
 
-export type Page = 'dashboard' | 'wizard' | 'templates' | 'presets' | 'history' | 'settings'
+export type Page = 'wizard' | 'templates' | 'settings'
 
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: '⌂' },
   { key: 'wizard', label: 'New Batch', icon: '+' },
   { key: 'templates', label: 'Templates', icon: '▤' },
-  { key: 'presets', label: 'Mapping Presets', icon: '⇄' },
-  { key: 'history', label: 'History', icon: '↺' },
   { key: 'settings', label: 'Settings', icon: '⚙' }
 ]
 
@@ -18,13 +17,16 @@ interface Props {
 }
 
 export default function AppShell({ page, onNavigate, children }: Props): JSX.Element {
+  const [aboutOpen, setAboutOpen] = useState(false)
+
   return (
     <div className="shell">
       <nav className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">GE</span>
-          <span className="brand-name">GenerateEveryPDF</span>
-        </div>
+        <button className="brand" onClick={() => setAboutOpen(true)} title="About">
+          <img className="brand-logo" src={logo} alt="Generate Every PDF" />
+          {/* keep in sync with package.json version */}
+          <span className="brand-name">generate every pdf!!! v0.1.0</span>
+        </button>
 
         <ul className="nav-list">
           {NAV_ITEMS.map((item) => (
@@ -42,6 +44,8 @@ export default function AppShell({ page, onNavigate, children }: Props): JSX.Ele
       </nav>
 
       <main className="content">{children}</main>
+
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
     </div>
   )
 }
