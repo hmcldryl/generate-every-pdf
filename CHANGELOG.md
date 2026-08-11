@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/) once it r
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-11
+
 ### Added
 
 - Single Document page: generate one PDF from field values typed directly into a form — no spreadsheet import or column mapping needed.

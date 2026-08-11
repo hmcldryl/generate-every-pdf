@@ -1,6 +1,6 @@
 {
   "name": "generateeverypdf",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Windows desktop app to batch-generate PDFs from spreadsheet data using user-defined HTML/CSS templates and JSON mapping configs.",
   "main": "./out/main/index.js",
   "author": "John Daryl Homecillo",

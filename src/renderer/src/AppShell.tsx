@@ -26,7 +26,7 @@ export default function AppShell({ page, onNavigate, children }: Props): JSX.Ele
         <button className="brand" onClick={() => setAboutOpen(true)} title="About">
           <img className="brand-logo" src={logo} alt="Generate Every PDF" />
           {/* keep in sync with package.json version */}
-          <span className="brand-name">generate every pdf!!! v0.1.0</span>
+          <span className="brand-name">generate every pdf!!! v1.1.0</span>
         </button>
 
         <ul className="nav-list">
