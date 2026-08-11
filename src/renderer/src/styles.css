@@ -464,15 +464,9 @@ progress {
 }
 
 .template-year {
+  flex: 1;
   font-weight: 600;
   min-width: 48px;
-}
-
-.template-path {
-  flex: 1;
-  color: var(--muted);
-  font-size: 12px;
-  font-family: 'Cascadia Code', Consolas, monospace;
 }
 
 .template-card-body {

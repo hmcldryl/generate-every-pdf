@@ -31,8 +31,9 @@ export interface FieldMapping {
 //   - "checkbox": compared against a value in template.html, typically
 //     with the `eq`/`notEmpty` helpers, e.g. {{#if (eq attending "Yes")}}.
 //   - "image": the mapped cell holds a filename (e.g. "jane.jpg") that the
-//     generator looks up in Documents/GenerateEveryPDF/Images and embeds —
-//     see resolveImageUrl() in generate/worker.ts.
+//     generator looks up in Documents/GenerateEveryPDF/Images/<template-name>/
+//     and embeds — see resolveImageUrl() in generate/worker.ts and
+//     imagesDirForTemplate() in main/paths.ts.
 export interface TemplateFieldDef {
   key: string
   label: string
@@ -121,6 +122,18 @@ export interface GenerateProgress {
   failed: number
   currentRow?: string
   done: boolean
+}
+
+// One-off equivalent of GenerateJobConfig: field values are typed directly
+// into the form instead of coming from a mapped sheet row.
+export interface GenerateSingleJobConfig {
+  templateRef: TemplateRef
+  data: Record<string, string> // template field key -> value, straight from the form
+  outputDir: string
+}
+
+export interface GenerateSingleResult {
+  outputFile: string
 }
 
 export interface GenerateRowResult {

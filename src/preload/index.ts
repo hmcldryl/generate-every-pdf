@@ -5,6 +5,8 @@ import type {
   GenerateJobConfig,
   GenerateProgress,
   GenerateRowResult,
+  GenerateSingleJobConfig,
+  GenerateSingleResult,
   ImportedSheet,
   NewTemplateInput,
   StorageDirs,
@@ -42,6 +44,8 @@ const api = {
   ): Promise<TemplateSettings> => ipcRenderer.invoke(IPC.SAVE_TEMPLATE_SETTINGS, templateRef, patch),
 
   startGenerate: (job: GenerateJobConfig): Promise<boolean> => ipcRenderer.invoke(IPC.GENERATE_START, job),
+  generateSingle: (job: GenerateSingleJobConfig): Promise<GenerateSingleResult> =>
+    ipcRenderer.invoke(IPC.GENERATE_SINGLE, job),
   cancelGenerate: (): Promise<boolean> => ipcRenderer.invoke(IPC.GENERATE_CANCEL),
   onGenerateProgress: (cb: (p: GenerateProgress) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: GenerateProgress): void => cb(progress)

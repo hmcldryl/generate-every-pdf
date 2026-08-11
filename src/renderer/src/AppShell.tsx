@@ -2,10 +2,11 @@ import { useState, type ReactNode } from 'react'
 import logo from './assets/icon.svg'
 import AboutModal from './AboutModal'
 
-export type Page = 'wizard' | 'templates' | 'settings'
+export type Page = 'wizard' | 'single' | 'templates' | 'settings'
 
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: 'wizard', label: 'New Batch', icon: '+' },
+  { key: 'single', label: 'Single Document', icon: '⎘' },
   { key: 'templates', label: 'Templates', icon: '▤' },
   { key: 'settings', label: 'Settings', icon: '⚙' }
 ]

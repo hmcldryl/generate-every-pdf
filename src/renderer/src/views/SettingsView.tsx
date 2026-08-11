@@ -76,8 +76,10 @@ export default function SettingsView(): JSX.Element {
           <div>
             <strong>Images folder</strong>
             <p className="muted">
-              Drop image files here. An "image"-type field's mapped sheet cell only needs the filename (e.g.
-              <code> jane.jpg</code>) — the generator looks it up here.
+              Each template gets its own subfolder here, named after the template (e.g.{' '}
+              <code>Images/{'{template-name}'}/</code>). Drop that template's row images into its subfolder —
+              an "image"-type field's mapped sheet cell only needs the filename (e.g. <code>jane.jpg</code>) —
+              the generator looks it up there.
             </p>
           </div>
           <div className="settings-control">

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/) once it r
 
 ## [Unreleased]
 
+### Added
+
+- Single Document page: generate one PDF from field values typed directly into a form — no spreadsheet import or column mapping needed.
+
+### Changed
+
+- `image`-type fields now resolve against a per-template subfolder, `Documents/GenerateEveryPDF/Images/<template-name>/`, instead of one flat `Images/` folder shared by every template.
+- Templates list no longer shows each template's on-disk folder path inline.
+
 ## [1.0.0] - 2026-08-10
 
 ### Added

@@ -16,7 +16,8 @@ Documents/GenerateEveryPDF/
 │       ├── style.css          # linked from template.html via <link rel="stylesheet" href="style.css">
 │       ├── template.json      # the settings file: fields, mapping, startRow, paperSize, fileNamePattern
 │       └── assets/            # optional: static images (letterhead, logo, signature) referenced by template.html
-└── Images/                    # flat folder of row images — see "Image fields" below
+└── Images/
+    └── {template-name}/       # one row-image folder per template — see "Image fields" below
 ```
 
 ## `template.json` — the one settings file
@@ -56,14 +57,17 @@ template or edit its mapping (Template step of a batch), so it's reused next tim
 
 Sheet cells for an image field hold a plain filename — nothing else to configure per row:
 
-1. Drop the image files into `Documents/GenerateEveryPDF/Images/`.
+1. Drop the image files into `Documents/GenerateEveryPDF/Images/{template-name}/` (the same name as the
+   template's own folder — create it if it isn't there yet, or just run one generation and the app creates it
+   for you).
 2. In the sheet, put the filename (e.g. `jane-doe.jpg`) in the mapped column.
 3. Reference the field normally in `template.html`, e.g. `<img src="{{photo}}" />`.
 
-At generation time, any mapped value that looks like an image path/filename is resolved against the Images
-folder and embedded (recompressed to keep file size down) — this works regardless of whether the field is
-tagged `"type": "image"` in `template.json`; the tag is there for your own documentation and for the app's
-field-type dropdown to remember your choice.
+At generation time, any mapped value that looks like an image path/filename is resolved against that
+template's own Images subfolder and embedded (recompressed to keep file size down) — this works regardless of
+whether the field is tagged `"type": "image"` in `template.json`; the tag is there for your own documentation
+and for the app's field-type dropdown to remember your choice. Each template gets its own subfolder so two
+templates can both have a `jane-doe.jpg` without colliding.
 
 ## Checkbox fields
 
